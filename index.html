@@ -234,6 +234,7 @@ nav.tabs a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)
 .rth .a{font-weight:600;overflow-wrap:anywhere;flex:1;min-width:0}
 .rt.Fainted .rth .a{text-decoration:line-through;color:var(--muted)}
 .lnk{background:transparent;border:0;color:var(--accent);font-size:13px;cursor:pointer;padding:4px 0;white-space:nowrap}
+.lnk[data-rand]{border:1px solid var(--line);padding:3px 8px;color:var(--ink);background:var(--sunk)}
 .rtf{display:grid;grid-template-columns:40px 1.3fr 1fr 1fr;gap:6px;align-items:center}
 .rtf .ps{display:flex;align-items:center;justify-content:center;height:36px}
 .rtf input,.rtf select{font-size:16px;padding:7px 8px;width:100%}
@@ -720,9 +721,10 @@ function bossHtml(c,i,nb){
 }
 function rowHtml(a,i){
   const e=byArea(sel,a), isOpen=openArea===a, n=speciesN(sel,a), st=e?e.st:"";
-  const names=[]; ((ENC[sel]||{})[a]||"").split(" | ").forEach(p=>{if(p)p.slice(p.indexOf(": ")+2).split(", ").forEach(x=>{if(!names.includes(x))names.push(x);});});
+  const names=areaNames(a);
   return `<div class="rt ${esc(st)}">
     <div class="rth"><i class="dot ${esc(st)}"></i><span class="a">${esc(a)}</span>
+      ${names.length?`<button type="button" class="lnk" data-rand="${i}" aria-label="Pick a random encounter for ${esc(a)}">Random</button>`:""}
       <button type="button" class="lnk" data-area="${i}" aria-expanded="${isOpen}">${n?n+" possible":"Encounters"} ${isOpen?"▴":"▾"}</button></div>
     <div class="rtf">
       <span class="ps">${e&&e.sp?pic(e.sp,effT(e),"mid"):`<i class="orb big e"></i>`}</span>
@@ -733,6 +735,19 @@ function rowHtml(a,i){
     ${rowMsg&&rowMsg.i===i?`<div class="rmsg">${esc(rowMsg.t)}</div>`:""}
     <datalist id="dl-${i}">${names.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist>
     ${isOpen?encHtml(a,i):""}</div>`;
+}
+/* every species listed for an area, in list order */
+function areaNames(a){const names=[]; ((ENC[sel]||{})[a]||"").split(" | ").forEach(p=>{if(p)p.slice(p.indexOf(": ")+2).split(", ").forEach(x=>{if(!names.includes(x))names.push(x);});}); return names;}
+/* random encounter: an even pick among the area's species, leaving out ones already owned in this game (dupes clause) */
+function randomFor(i){
+  const a=areasOf(sel)[i], names=areaNames(a), cur=byArea(sel,a);
+  const own=new Set(encOf(sel).filter(e=>CAUGHT.includes(e.st)&&(!cur||e.id!==cur.id)).map(e=>e.sp));
+  let pool=names.filter(n=>!own.has(n)); const allOwned=!pool.length; if(allOwned) pool=names.slice();
+  if(pool.length>1&&cur&&cur.sp) pool=pool.filter(n=>n!==cur.sp);
+  if(!pool.length) return;
+  const pickN=pool[Math.floor(Math.random()*pool.length)];
+  setField(i,"sp",pickN);
+  if(allOwned){rowMsg={i,t:"Every species here is already owned, so this pick is a dupe."};render();}
 }
 /* write a field of an area's entry; an entry with nothing in it is removed */
 function setField(i,field,val){
@@ -872,6 +887,7 @@ document.addEventListener("click",ev=>{
     armed=null;t.textContent="Restore from this text";
     change(()=>{state=normalize(d);});$("bk-in").value="";$("bk-msg").textContent="Run restored.";return;}
   if(t.dataset.starter){const v=t.dataset.starter;change(()=>{if(!state.starter)state.starter={};state.starter[sel]=v;});return;}
+  if(t.dataset.rand!==undefined){randomFor(+t.dataset.rand);return;}
   if(t.dataset.area!==undefined){const a=areasOf(sel)[+t.dataset.area];openArea=openArea===a?null:a;render();return;}
   if(t.dataset.mv){const [id,to]=t.dataset.mv.split(":");
     if(to==="Fainted"&&armed!==id){armed=id;render();return;}
