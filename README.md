@@ -4,4 +4,4 @@ A personal tracker for a ten-game Pokémon Genlocke: areas, encounters, boss tea
 
 Open the site in Safari, tap Share, then Add to Home Screen. The run is saved on the device; use Backup on the Run tab to copy it out.
 
-Unofficial fan project. Pokémon and its names are trademarks of Nintendo, Game Freak and The Pokémon Company. Encounter and team data were compiled from Serebii and PokémonDB. Sprites load from the PokeAPI sprites repository.
+Unofficial fan project. Pokémon and its names are trademarks of Nintendo, Game Freak and The Pokémon Company. Encounter and team data were compiled from Serebii and PokémonDB. Sprites load from the PokeAPI sprites repository. Encounter rates come from the PokeAPI data set. Boss abilities and the route order come from nuzlocke.app (see THIRD_PARTY.md).
